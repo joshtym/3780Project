@@ -56,6 +56,17 @@ struct Message
 				payload[i] = other.payload[i];
 	}
 	
+	Message& operator=( const Message& other)
+	{
+		seqNum = other.seqNum;
+		mType = other.mType;
+		source = other.source;
+		dest = other.dest;
+		
+		for(int i = 0; i < paySize; i++)
+			payload[i] = other.payload[i];
+	}
+	
 	void print()
 	{
 		cout << "Sequence number: " << seqNum << endl;
@@ -103,7 +114,7 @@ int main(int argc, char *argv[])
 	struct sockaddr_in server;
 	struct sockaddr_in from;
 	vector<Message> messageList;
-	Message m, m2;
+	Message m, m2, m3;
 	char* servBuff[sizeof(Message)];
 	
 	if (argc < 2)
@@ -140,29 +151,51 @@ int main(int argc, char *argv[])
 				messageList.push_back(m);
 				break;
 			case GET:
-				int j = 0;
-				for (int i = 0; i < messageList.size(); i++)
-					if (messageList[i].dest == m.source)
-						j++;
-				
-				int numDigits = zeroDelve(j);
-				
-				for (int i = numDigits - 1; i >= 0; i--)
 				{
-					m2.payload[i] = numDigits % 10;
-					numDigits /= 10;
+					int j = 0;
+					for (int i = 0; i < messageList.size(); i++)
+						if (messageList[i].dest == m.source)
+							j++;
+				
+					int numDigits = zeroDelve(j);
+				
+					for (int i = numDigits - 1; i >= 0; i--)
+					{
+						m2.payload[i] = numDigits % 10;
+						numDigits /= 10;
+					}
+				
+					n = sendto(sock, &m2, sizeof(struct Message), 0, (struct sockaddr*)&from, fromlen);
+				
+					if (n < 0)
+						error("sendto");
+					
+					for (vector<Message>::iterator it = messageList.begin(); it != messageList.end(); ++it)
+					{
+						if ((*it).dest == m.source)
+						{
+							m3 = *it;
+							n = sendto(sock, &m3, sizeof(struct Message), 0, (struct sockaddr*)&from, fromlen);
+						
+							if (n < 0)
+								error("sendto");
+						
+							messageList.erase(it);
+							--it;
+						}
+					}
 				}
 				break;
-		} 
+		}
 		
 		m.print();
 		
 		// Changing M
 		m.mType = ACK;
 		
-		n = sendto(sock, &m, sizeof(struct Message), 0,(struct sockaddr *)&from,fromlen);
+		n = sendto(sock, &m, sizeof(struct Message), 0, (struct sockaddr *)&from,fromlen);
 		
-		if (n  < 0) 
+		if (n < 0) 
 			error("sendto");
 	}
 	

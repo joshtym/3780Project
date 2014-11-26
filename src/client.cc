@@ -56,6 +56,17 @@ struct Message
 				payload[i] = other.payload[i];
 	}
 	
+	Message& operator=( const Message& other)
+	{
+		seqNum = other.seqNum;
+		mType = other.mType;
+		source = other.source;
+		dest = other.dest;
+		
+		for(int i = 0; i < paySize; i++)
+			payload[i] = other.payload[i];
+	}
+	
 	void print()
 	{
 		cout << "Sequence number: " << seqNum << endl;
@@ -128,9 +139,9 @@ int main(int argc, char **argv)
 	bcopy((char*)hp->h_addr, (char*)&server.sin_addr, hp->h_length);
 	server.sin_port = htons(atoi(argv[2]));
 	length = sizeof(struct sockaddr_in);
-	printf("Please enter the message: ");
+	//printf("Please enter the message: ");
 	bzero(buffer, 256);
-	fgets(buffer, 255, stdin);
+	//fgets(buffer, 255, stdin);
 	
 	cout << "Please enter your 10 digit client number: ";
 	cin >> clientNum;
@@ -177,13 +188,14 @@ int main(int argc, char **argv)
 			
 			if (n < 0)
 				error("Sendto");
-				
-			n = recvfrom(sock, &m2, sizeof(struct Message),0,(struct sockaddr *)&from, &length);
 			
+			n = recvfrom(sock, &m2, sizeof(struct Message),0,(struct sockaddr *)&from, &length);
+			cout << n << endl;
 			if (n < 0)
 				error("recvfrom");
-			
-			int i, j, k = 0;
+			int i= 0;
+			int j = 0;
+			int k = 0;
 			int numIncoming = 0;
 			char result[256];
 			while (m2.payload[i] != ' ')
