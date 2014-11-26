@@ -153,8 +153,6 @@ int main(int argc, char *argv[])
 					numDigits /= 10;
 				}
 				break;
-			default:
-				break;
 		} 
 		
 		m.print();

@@ -6,10 +6,20 @@ LNFLAGS = -lGL -lGLU -lGLEW -lglut -lm -Wno-write-strings
 OBJECTS = server.o client.o
 OBJS1 = $(addprefix $(OBJDIR), client.o)
 OBJS2 = $(addprefix $(OBJDIR), server.o)
-EXECUTALBE1 = ../bin/client
+EXECUTABLE1 = ../bin/client
 EXECUTABLE2 = ../bin/server
 
-$(EXECUTALBE1): $(OBJS1)
+all:
+	make $(EXECUTABLE1)
+	make $(EXECUTABLE2)
+	
+client:
+	make $(EXECUTABLE1)
+	
+server:
+	make $(EXECUTABLE2)
+
+$(EXECUTABLE1): $(OBJS1)
 	g++ $(LIBDIR) -o $@ $^ $(LNFLAGS)
 	
 $(EXECUTABLE2): $(OBJS2)
@@ -24,4 +34,4 @@ clean:
 	rm -f ../obj/*.o
 
 clean-all: clean
-	rm -f $(EXECUTALBE1) $(EXECUTABLE2)
+	rm -f $(EXECUTABLE1) $(EXECUTABLE2)

@@ -1,6 +1,12 @@
 all:
-	$(MAKE) -C src
+	$(MAKE) -C src all
+
+server:
+	$(MAKE) -C src server
 	
+client: 
+	$(MAKE) -C src client
+
 clean:
 	$(MAKE) -C src clean
 
