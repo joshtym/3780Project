@@ -13,6 +13,7 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <string>
 
 using namespace std; 
 
@@ -94,6 +95,12 @@ struct Message
 		cout << endl;
 	}
 	
+	void clear()
+	{
+		for (int i = 0; i < 256; i++)
+			payload[i] = ' ';
+	}
+	
 	int seqNum;
 	MType mType;
 	long int source;
@@ -109,16 +116,19 @@ void error(const char *msg)
 
 int main(int argc, char **argv)
 {
+	// Variable declarations
 	int sock, n;
 	unsigned int length;
 	struct sockaddr_in server, from;
 	struct hostent *hp;
 	char buffer[256];
 	int userChoice = 0;
-	long int clientNum;
+	long int clientNum = 0;
 	long int destNum;
 	int seqNum = 0;
 	Message m, m2, m3;
+	bool success = false;
+	string dummyHolder;
 	
 	if (argc !=3)
 	{
@@ -139,13 +149,18 @@ int main(int argc, char **argv)
 	bcopy((char*)hp->h_addr, (char*)&server.sin_addr, hp->h_length);
 	server.sin_port = htons(atoi(argv[2]));
 	length = sizeof(struct sockaddr_in);
-	//printf("Please enter the message: ");
 	bzero(buffer, 256);
-	//fgets(buffer, 255, stdin);
-	
-	cout << "Please enter your 10 digit client number: ";
-	cin >> clientNum;
 
+	cout << "Please enter your 10 digit client number: ";
+	while ((clientNum < 1000000000) || (clientNum > 9999999999) || (dummyHolder.size() != 10))
+	{
+		getline(cin, dummyHolder);
+		clientNum = stoi(dummyHolder);
+		if ((clientNum < 1000000000) || (clientNum > 9999999999))
+			cout << "Invalid. Please re-enter your 10 digit client number: ";
+	}
+	
+		
 	while (1)
 	{
 		cout << "What would you like to do ('0' for SEND, '1' for GET, and '2' for quit): ";
@@ -155,9 +170,14 @@ int main(int argc, char **argv)
 		
 		if (userChoice == 0)
 		{
-			cout << "Please enter the destination address: ";
-			cin >> destNum;
-			cin.ignore();
+			cout << "Please enter the 10 digit destination address: ";
+			while ((destNum < 1000000000) || (destNum > 9999999999) || (dummyHolder.size() != 10))
+			{
+				getline(cin, dummyHolder);
+				destNum = stoi(dummyHolder);
+				if ((destNum < 1000000000) || (destNum > 9999999999))
+					cout << "Please re-enter the destination address: ";
+			}
 			
 			cout << "What message would you like to send: ";
 			getline(cin, message);
@@ -189,15 +209,18 @@ int main(int argc, char **argv)
 			if (n < 0)
 				error("Sendto");
 			
+			m2.clear();
 			n = recvfrom(sock, &m2, sizeof(struct Message),0,(struct sockaddr *)&from, &length);
-			cout << n << endl;
+			
 			if (n < 0)
 				error("recvfrom");
+				
 			int i= 0;
 			int j = 0;
 			int k = 0;
 			int numIncoming = 0;
 			char result[256];
+			
 			while (m2.payload[i] != ' ')
 			{
 				result[i] = m2.payload[i];
@@ -215,18 +238,37 @@ int main(int argc, char **argv)
 			
 			for (int i = 0; i < numIncoming; i++)
 			{
+				long int tempVar;
+				
+				m3.clear();
 				n = recvfrom(sock, &m3, sizeof(struct Message),0,(struct sockaddr *)&from, &length);
 				
 				if (n < 0)
 					error("recvfrom");
+				
+				if (m3.dest == clientNum)
+				{
+					m3.print();
 					
-				m3.print();
-				m3.mType = ACK;
+					if (m3.mType != ACK)
+					{
+						tempVar = m3.dest;
+						m3.dest = m3.source;
+						m3.source = tempVar;	
+						m3.mType = ACK;
 				
-				n = sendto(sock, &m3, sizeof(struct Message), 0, (struct sockaddr *)&server, length);
+						cout << "Sending acknowledgement to packet back to source" << endl;
 				
-				if (n < 0)
-					error("sendto");
+						n = sendto(sock, &m3, sizeof(struct Message), 0, (struct sockaddr *)&server, length);
+				
+						cout << "Sent acknowledgement" << endl;
+				
+						if (n < 0)
+							error("sendto");
+					}
+				}
+				else
+					i--;
 			}
 		}
 		else if (userChoice == 2)
