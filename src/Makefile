@@ -1,11 +1,12 @@
-CCFLAGS = -I /usr/include $(INCLUDEDIRS) -std=c++0x
+CCFLAGS = -I /usr/include $(INCLUDEDIRS) -std=c++11
 LIBDIR = -L /usr/lib
 INCLUDEDIRS = -I ../include/
 OBJDIR = ../obj/
 LNFLAGS = -lm -Wno-write-strings
-OBJECTS = server.o client.o
-OBJS1 = $(addprefix $(OBJDIR), client.o)
-OBJS2 = $(addprefix $(OBJDIR), server.o)
+OBJECTS1 = client.o
+OBJECTS2 = server.o
+OBJS1 = $(addprefix $(OBJDIR), $(OBJECTS1))
+OBJS2 = $(addprefix $(OBJDIR), $(OBJECTS2))
 EXECUTABLE1 = ../bin/client
 EXECUTABLE2 = ../bin/server
 

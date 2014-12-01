@@ -11,102 +11,47 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <vector>
-#include <iostream>
 #include <cmath>
-#include <string>
+#include <iostream>
+#include "Message.h"
+#include "ServerInfo.h"
 
 using namespace std; 
 
 static int paySize = 256;
 
-enum MType {SEND = 0, GET = 1, ACK = 2}; 
+static int socketIDs[] = {00000,  11111, 22222, 33333, 44444, 55555 };
 
-int zeroDelve(long int x)
-{
-	long int result = x;
-	int numDivs = 0;
-	
-	if ((result / 10) == 0)
-		return 1;
-	else
-	{
-		result /= 10;
-		numDivs++;
-		numDivs+= zeroDelve(result);
-		
-		return numDivs;
-	}
+int serverID = 0;
+
+int contains_all(long int destination, vector<ServerInfo> vec) {
+   for (int k = 1; k < 7; k++) {
+      for (int i = 0; i < 100; i++) {
+	 if (vec[k].clients[i] == destination) {
+	    return k;
+	 }
+      }
+   }
+
+   return -1; 
 }
 
-struct Message
-{
-	Message(int seq = 1, MType t = SEND, long int src = 1111111111, long int des = 2222222222, char p[256] = NULL) :  seqNum(seq), mType(t), source(src), dest(des)
-	{
-		for(int i = 0; i < paySize; i++)
-			payload[i] = ' ';
-		
-		if (p != NULL)
-			for(int i = 0; i < paySize; i++)
-				payload[i] = p[i];
-	}
-	
-	Message( const Message& other) :  seqNum(other.seqNum), mType(other.mType), source(other.source), dest(other.dest)
-	{
-		if (other.payload != NULL)
-			for(int i = 0; i < paySize; i++)
-				payload[i] = other.payload[i];
-	}
-	
-	Message& operator=( const Message& other)
-	{
-		seqNum = other.seqNum;
-		mType = other.mType;
-		source = other.source;
-		dest = other.dest;
-		
-		for(int i = 0; i < paySize; i++)
-			payload[i] = other.payload[i];
-	}
-	
-	void print()
-	{
-		cout << "Sequence number: " << seqNum << endl;
-		cout << "Type: ";
-		
-		switch (mType)
-		{
-			case 0:
-				cout << "SEND" << endl;
-				break;
-			case 1:
-				cout << "GET" << endl;
-				break;
-			case 2: 
-				cout << "ACK" << endl;
-				break;
-		}
-		
-		cout << "Source: " << source << endl;
-		cout << "Destination: " << dest << endl;
-		
-		cout << "Payload: ";
-		for (int i = 0; i < paySize; i++)
-			cout << payload[i];
-		cout << endl;
-	}
-	
-	void clear()
-	{
-		for (int i = 0; i < 256; i++)
-			payload[i] = ' ';
-	}
-	
-	int seqNum;
-	MType mType;
-	long int source;
-	long int dest;
-	char payload[256];
-};
+      
+int zeroDelve(long int x) {
+   long int result = x;
+   int numDivs = 0;
+
+   if ((result / 10) == 0) {
+      return 1;
+   } 
+   else {
+      result /= 10;
+      numDivs++;
+      numDivs+= zeroDelve(result);
+
+      return numDivs;
+   }
+}
 
 void error(const char *msg)
 {
@@ -155,7 +100,8 @@ int main(int argc, char **argv)
 	while ((clientNum < 1000000000) || (clientNum > 9999999999) || (dummyHolder.size() != 10))
 	{
 		getline(cin, dummyHolder);
-		clientNum = stoi(dummyHolder);
+		clientNum = stol(dummyHolder);
+		
 		if ((clientNum < 1000000000) || (clientNum > 9999999999))
 			cout << "Invalid. Please re-enter your 10 digit client number: ";
 	}
@@ -170,11 +116,15 @@ int main(int argc, char **argv)
 		
 		if (userChoice == 0)
 		{
+			cin.clear();
+			cin.ignore(10000, '\n');
 			cout << "Please enter the 10 digit destination address: ";
+			dummyHolder.clear();
+			
 			while ((destNum < 1000000000) || (destNum > 9999999999) || (dummyHolder.size() != 10))
 			{
 				getline(cin, dummyHolder);
-				destNum = stoi(dummyHolder);
+				destNum = stol(dummyHolder);
 				if ((destNum < 1000000000) || (destNum > 9999999999))
 					cout << "Please re-enter the destination address: ";
 			}
@@ -182,6 +132,7 @@ int main(int argc, char **argv)
 			cout << "What message would you like to send: ";
 			getline(cin, message);
 			
+			m.clear();
 			for (int i = 0; i < message.length(); i++)
 				m.payload[i] = message[i];
 				
@@ -189,6 +140,9 @@ int main(int argc, char **argv)
 			m.mType = SEND;
 			m.source = clientNum;
 			m.dest = destNum;
+			m.isClient = true;
+			
+			m.print();
 			
 			n = sendto(sock, &m, sizeof(struct Message), 0, (const struct sockaddr*)&server, length);
 			
