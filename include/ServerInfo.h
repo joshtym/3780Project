@@ -46,6 +46,8 @@ struct ServerInfo
 		distanceVector[serverID] = 0;
 		distanceVector[serverLeft] = rand() % 10 + 1;
 		distanceVector[serverRight] = rand() % 10 + 1;
+		throughWhichRouter[serverLeft] = serverLeft;
+		throughWhichRouter[serverRight] = serverRight;
 	}
 	
 	void print()
@@ -54,7 +56,7 @@ struct ServerInfo
 		
 		for (int i = 1; i < 6; i++)
 			if (i != serverID)
-				cout << "Distance to server with ID " << i << " is " << distanceVector[i] << endl;
+				cout << "Distance to server with ID " << i << " is " << distanceVector[i] << " and is through Server # " << throughWhichRouter[i] << endl;
 		
 		cout << "This server currently hosts for the following clients: " << endl;
 		for (int i = 0; i < 100; i++)
@@ -65,6 +67,7 @@ struct ServerInfo
 	}
 	
 	int distanceVector[6];
+	int throughWhichRouter[6];
 	long int clients[100];
 	int serverID;
 };
